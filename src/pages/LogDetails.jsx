@@ -3,6 +3,7 @@ import { ArrowLeft, Sparkles, MapPin, Globe, Leaf, MoreVertical, Trash2, Flag } 
 import { useAppContext } from '../context/AppContext';
 import './LogDetails.css';
 
+
 const LogDetails = ({ log, onBack }) => {
     const { getUserById, aseanCountries, currentUser, deleteLog, reportLog } = useAppContext();
     const [showMenu, setShowMenu] = useState(false);

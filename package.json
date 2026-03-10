@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+   "start": "react-scripts start",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -10,7 +11,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "firebase": "^12.10.0",
     "lucide-react": "^0.575.0",
+    "oracledb": "^6.10.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
