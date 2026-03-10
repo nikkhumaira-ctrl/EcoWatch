@@ -23,7 +23,8 @@
     gap: 4px;
     background: transparent;
     color: var(--text-muted);
-    width: 70px;
+    flex: 1;   /* evenly distribute space */
+    min-width: 0;
     transition: all 0.3s ease;
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Camera, Trophy, MessageCircle } from 'lucide-react';
+import { Home, Camera, Trophy, MessageCircle, BarChart } from 'lucide-react';
 import './BottomNav.css';
 
 const BottomNav = ({ currentTab, setCurrentTab }) => {
@@ -43,6 +43,17 @@ const BottomNav = ({ currentTab, setCurrentTab }) => {
                     <Trophy size={24} />
                 </div>
                 <span>Ranks</span>
+            </button>
+
+            {/* NEW Analytics tab */}
+            <button
+                className={`nav-item ${currentTab === 'analytics' ? 'active' : ''}`}
+                onClick={() => setCurrentTab('analytics')}
+            >
+                <div className="nav-icon-container">
+                    <BarChart size={24} />
+                </div>
+                <span>Analytics</span>
             </button>
         </nav>
     );
