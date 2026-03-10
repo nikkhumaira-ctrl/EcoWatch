@@ -1,144 +1,201 @@
+// src/context/AppContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { MOCK_LOGS, MOCK_USERS, ASEAN_COUNTRIES, getLeaderboardData } from '../data/mockData';
+import { db, auth } from "../firebase";
+import {
+  collection,
+  addDoc,
+  setDoc,
+  doc,
+  getDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  getDocs,
+} from "firebase/firestore";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  updateProfile
+} from "firebase/auth";
+import { ASEAN_COUNTRIES } from '../data/mockData';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-    // Authentication State
-    const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [logs, setLogs] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
 
-    // App Data State
-    const [logs, setLogs] = useState([]);
-    const [users, setUsers] = useState([]);
-    const [leaderboard, setLeaderboard] = useState([]);
-
-    // Load initial mock data
-    useEffect(() => {
-        // Check localStorage for an existing user session to persist login
-        const savedUserId = localStorage.getItem('ecowatch_user_id');
-        if (savedUserId) {
-            const user = MOCK_USERS.find(u => u.id === savedUserId);
-            if (user) setCurrentUser(user);
+  // -----------------------------
+  // Listen to Firebase Auth changes
+  // -----------------------------
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Fetch Firestore user data
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          setCurrentUser({ uid: user.uid, ...userDoc.data() });
+        } else {
+          setCurrentUser(user); // fallback
         }
-
-        // Load logs and sort by newest first
-        setLogs([...MOCK_LOGS].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
-        setUsers(MOCK_USERS);
-        setLeaderboard(getLeaderboardData());
-    }, []);
-
-    const login = (userId, password) => {
-    const user = users.find(
-        u =>
-            u.id === userId ||
-            u.name.toLowerCase() === userId.toLowerCase()
-    );
-
-    if (user && user.password === password) {
-        setCurrentUser(user);
-        localStorage.setItem('ecowatch_user_id', user.id);
-        return true;
-    }
-
-    return false;
-};
-
-    const signup = (name, countryId, password) => {
-        const newUser = {
-            id: `u${Date.now()}`,
-            name,
-            country: countryId,
-            password,
-            points: 10, // Starting points for joining
-            avatar: name.substring(0, 2).toUpperCase()
-        };
-
-        setUsers(prev => [...prev, newUser]);
-        setCurrentUser(newUser);
-        localStorage.setItem('ecowatch_user_id', newUser.id);
-
-        // Update leaderboard with new user
-        // We would normally re-calculate leaderboard based on users, but for simplicity here:
-        setLeaderboard(prev => {
-            let updated = [...prev];
-            const countryIndex = updated.findIndex(c => c.id === countryId);
-            if (countryIndex >= 0) {
-                updated[countryIndex].score += newUser.points;
-            } else {
-                const country = ASEAN_COUNTRIES.find(c => c.id === countryId);
-                if (country) {
-                    updated.push({ id: countryId, name: country.name, flag: country.flag, score: newUser.points });
-                }
-            }
-            return updated.sort((a, b) => b.score - a.score);
-        });
-
-        return true;
-    };
-
-    const logout = () => {
+      } else {
         setCurrentUser(null);
-        localStorage.removeItem('ecowatch_user_id');
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // -----------------------------
+  // Fetch logs from Firestore
+  // -----------------------------
+  useEffect(() => {
+    const fetchLogs = async () => {
+      const q = query(collection(db, "observations"), orderBy("timestamp", "desc"));
+      const querySnapshot = await getDocs(q);
+      const fetchedLogs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setLogs(fetchedLogs);
     };
+    fetchLogs();
+  }, []);
 
-    const updateUser = (userId, updates) => {
-        setUsers(prevUsers =>
-            prevUsers.map(u => u.id === userId ? { ...u, ...updates } : u)
-        );
-        if (currentUser && currentUser.id === userId) {
-            setCurrentUser(prev => ({ ...prev, ...updates }));
-        }
+  // -----------------------------
+// Fetch users from Firestore  
+// -----------------------------
+useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const usersRef = collection(db, "users");
+      const querySnapshot = await getDocs(usersRef);
+      const fetchedUsers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setUsers(fetchedUsers);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  };
+  fetchUsers();
+}, []);
+
+  // -----------------------------
+  // Auth functions
+  // -----------------------------
+  const login = async (email, password) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Fetch Firestore data
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        setCurrentUser({ uid: user.uid, ...userDoc.data() });
+      } else {
+        setCurrentUser(user);
+      }
+      return true;
+    } catch (err) {
+      console.error("Login error:", err);
+      return false;
+    }
+  };
+
+  const signup = async (email, password, name, country) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Update display name in Auth
+      await updateProfile(user, { displayName: name });
+
+      // Save user in Firestore using UID as doc ID
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        name,
+        email,
+        country,
+        points: 10, // starting points
+        avatar: name.substring(0, 2).toUpperCase()
+      });
+
+      // Fetch Firestore data and set as current user
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      setCurrentUser({ uid: user.uid, ...userDoc.data() });
+
+      return true;
+    } catch (err) {
+      console.error("Signup error:", err);
+      return false;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setCurrentUser(null);
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
+
+  // -----------------------------
+  // Logs/Observations
+  // -----------------------------
+  const addLog = async (newLogEntry) => {
+    if (!currentUser) return null;
+    const log = {
+      ...newLogEntry,
+      userId: currentUser.uid,
+      timestamp: new Date(),
     };
+    try {
+      const docRef = await addDoc(collection(db, "observations"), log);
+      setLogs(prev => [{ id: docRef.id, ...log }, ...prev]);
+      return { id: docRef.id, ...log };
+    } catch (err) {
+      console.error("Error adding log:", err);
+      return null;
+    }
+  };
 
-    const addLog = (newLogEntry) => {
-        const log = {
-            id: `L${Date.now()}`,
-            userId: currentUser.id,
-            timestamp: new Date().toISOString(),
-            ...newLogEntry
-        };
+  const deleteLog = async (logId) => {
+    try {
+      await deleteDoc(doc(db, "observations", logId));
+      setLogs(prev => prev.filter(l => l.id !== logId));
+    } catch (err) {
+      console.error("Error deleting log:", err);
+    }
+  };
 
-        setLogs(prev => [log, ...prev]);
+  const reportLog = (logId) => {
+    setLogs(prev => prev.filter(l => l.id !== logId));
+  };
 
-        // Award points to user
-        setCurrentUser(prev => ({ ...prev, points: prev.points + 50 }));
+  const getUserById = (id) => users.find(u => u.id === id);
 
-        // Ideally we'd trigger a leaderboard recalculation here 
-        // but we can skip that for the prototype or implement it fully if strictly needed.
-        return log;
-    };
-
-    const deleteLog = (logId) => {
-        setLogs(prev => prev.filter(l => l.id !== logId));
-        // You typically might also deduct points, but for this mock, just deleting the post.
-    };
-
-    const reportLog = (logId) => {
-        // Mock report logic: immediately hide it from feed to simulate action taken.
-        setLogs(prev => prev.filter(l => l.id !== logId));
-    };
-
-    const getUserById = (id) => users.find(u => u.id === id);
-
-    return (
-        <AppContext.Provider value={{
-            currentUser,
-            logs,
-            leaderboard,
-            login,
-            signup,
-            logout,
-            updateUser,
-            addLog,
-            deleteLog,
-            reportLog,
-            getUserById,
-            users,
-            aseanCountries: ASEAN_COUNTRIES
-        }}>
-            {children}
-        </AppContext.Provider>
-    );
+  // -----------------------------
+  // Context Value
+  // -----------------------------
+  return (
+    <AppContext.Provider value={{
+      currentUser,
+      setCurrentUser,
+      logs,
+      users,
+      leaderboard,
+      login,
+      signup,
+      logout,
+      addLog,
+      deleteLog,
+      reportLog,
+      getUserById,
+      aseanCountries: ASEAN_COUNTRIES
+    }}>
+      {children}
+    </AppContext.Provider>
+  );
 };
 
 export const useAppContext = () => useContext(AppContext);

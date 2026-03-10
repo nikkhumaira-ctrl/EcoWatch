@@ -2,6 +2,8 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Camera, RefreshCw, CheckCircle2, ChevronLeft, Leaf, Fish, Droplets, Wind } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import './Observation.css';
+import { db } from "../firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 const CATEGORIES = [
     { id: 'Flora', label: 'Plants & Flora', icon: <Leaf size={32} /> },
@@ -11,7 +13,7 @@ const CATEGORIES = [
 ];
 
 const Observation = ({ onSuccess }) => {
-    const { addLog } = useAppContext();
+    const { addLog, currentUser } = useAppContext();
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
 
@@ -95,15 +97,15 @@ const Observation = ({ onSuccess }) => {
         if (!photo || !selectedCategory) return;
         setIsSubmitting(true);
 
-        // Simulate API delay for AI analysis
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const newLog = {
+ try {
+        // Upload observation to Firestore
+        const docRef = await addDoc(collection(db, "observations"), {
             imageUrl: photo,
-            notes: notes || 'No notes provided.',
+            notes: notes || "No notes provided.",
             location: {
-                name: locationName || 'Unknown Location',
-                lat: 0, lng: 0
+                name: locationName || "Unknown Location",
+                lat: 0,
+                lng: 0
             },
             aiAnalysis: {
                 category: selectedCategory.id,
@@ -111,10 +113,15 @@ const Observation = ({ onSuccess }) => {
                 culturalContext: {
                     'en': `AI note: Analyzed new ${selectedCategory.label} field snapshot.`
                 }
-            }
-        };
+            },
+            timestamp: serverTimestamp(),
+            userId: currentUser.uid 
+        });
 
-        addLog(newLog);
+        console.log("Observation saved with ID:", docRef.id);
+    } catch (err) {
+        console.error("Error saving observation:", err);
+    }
         setIsSubmitting(false);
         if (onSuccess) onSuccess();
     };
