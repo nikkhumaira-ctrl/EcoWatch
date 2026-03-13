@@ -14,6 +14,12 @@ This web enables users to document and share observations of different environme
 
 Every submission is enhanced with essential data, including GPS coordinates and timestamps, making each observation geographically locatable and verifiable. The integration of photographic evidence helps to strengthen data reliability and allows researchers and stakeholders to validate observations.
 
+## UN Sustainable Development Goals
+
+EcoWatch supports the following SDGs:
+
+- SDG 13: Climate Action – raises environmental awareness through data tracking and analytics.
+
 ## Key Features
 
 ### 📱 Citizen Data Collection
