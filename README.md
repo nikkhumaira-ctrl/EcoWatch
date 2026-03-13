@@ -1,16 +1,82 @@
-# React + Vite
+# EcoWatch 
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+EcoWatch is a web-based environmental application designed to connect citizens with scientific community through their participation in environmental monitoring. The platform empowers users across ASEAN countries to contribute meaningfully to environmental data collection and observation.
 
-Currently, two official plugins are available:
+## Project Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+By utilizing the presence of smartphones, EcoWatch converts ordinary individuals into mobile sensors for environmental observation. This approach extends the capacity for data collection, bypassing what capability of a traditional laboratory could achieve alone.
 
-## React Compiler
+This web enables users to document and share observations of different environmental phenomena in their surroundings:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Flora and fauna species identification and biodiversity tracking
+- Air quality observations
+- Water quality monitoring
 
-## Expanding the ESLint configuration
+Every submission is enhanced with essential data, including GPS coordinates and timestamps, making each observation geographically locatable and verifiable. The integration of photographic evidence helps to strengthen data reliability and allows researchers and stakeholders to validate observations.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## UN Sustainable Development Goals
+
+EcoWatch supports the following SDGs:
+
+- SDG 13: Climate Action – raises environmental awareness through data tracking and analytics.
+
+## Key Features
+
+### 📱 Citizen Data Collection
+- Multimodal input support (photographs, descriptive notes)
+- Automatic GPS geotagging and timestamping
+- Visual evidence documentation for data credibility
+- Real-time environmental data submission
+
+### 🤖 AI-Powered Chatbot Assistant
+- Real-time support and explanation for users
+- provides scientific knowledge and guidance
+- Transforms the web from a one-way reporting tool into an interactive intelligent companion
+
+### 🏆Gamification elements
+- Leaderboards to encourage consistent participation
+- Engagement features
+- Continuous engagement with the platform
+
+### 🔐 User Authentication
+- Secure sign up and login functionality
+- Firebase authentication integration
+
+## Technologies Stack
+
+### Frontend
+- React.js
+- Vite
+- CSS
+
+### Backend/ Services
+- Firebase Authentication
+- Firebase Firestore Database
+- AI-Powered Chatbot
+
+### Development Tools 
+- GitHub
+- VS Code
+
+
+## Setup Instructions
+
+Follow these steps to run the EcoWatch project locally.
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/nikkhumaira-ctrl/EcoWatch.git
+   ```
+
+2. **Navigate to project folder and install dependencies**
+   ```bash
+   cd EcoWatch
+   npm install
+   ```
+ 
+3. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+GitHub Repository: https://github.com/nikkhumaira-ctrl/EcoWatch
